@@ -36,15 +36,18 @@ int main()
     }
     input.close();
   } else {
-      stodo_data=json::object();
+    std::cerr<<"Error: Could not open file '"<<filename<<"'\n";
+    return 1;
   }
 
   if(!stodo_data.contains("stodos") || !stodo_data["stodos"].is_array())
   {
     stodo_data["stodos"]=json::array();
   }
-
-  std::printf("Wellcome to STODO_List\n");
+  
+  std::printf("==================\n");
+  std::printf("==  STODO_List  ==\n");
+  std::printf("==================\n");
 
   while(loop)
   {
@@ -54,7 +57,8 @@ int main()
     std::printf("What would you like to do?\n");
     std::printf("1) Add a new STODO\n");
     std::printf("2) List all your STODOs\n");
-    std::printf("3) Quit\n\n");
+    std::printf("3) Erase STODOs");
+    std::printf("Q/q) Quit\n\n");
     getline(std::cin, options_answer);
 
     if(options_answer=="1")
@@ -99,6 +103,23 @@ int main()
         std::cerr<<"Error: Could not add your STODO";
       }
     }
+    else if(options_answer=="2")
+    {
+      std::printf("=== STODOs List ===\n\n");
+      std::cout<<std::setw(4)<<stodo_data<<std::endl;
+    }
+    else if(options_answer=="3")
+    {
+      
+    }
+    else if(options_answer=="Q"||options_answer=="q")
+    {
+      std::printf("Exiting the program...");
+      return loop=false;
+    }
+    else
+    {
+      std::cerr<<"Error: Invalid answer\n\n";
+    }
   }
-
 }
