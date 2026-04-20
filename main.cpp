@@ -13,14 +13,26 @@
 #include <fstream>
 #include <string>
 #include <nlohmann/json.hpp>
+#include <filesystem>
+#include <iomanip>
 
 using json=nlohmann::json;
-bool loop=true;
 
-int main()
+int main(int argc, char* argv[])
 {
-  const std::string filename="stodo.json";
+  bool loop=true;
+  system("clear");
 
+  std::filesystem::path exec_absolute=std::filesystem::absolute(argv[0]);
+  std::filesystem::path build_dir=exec_absolute.parent_path();
+  std::filesystem::path project_dir=build_dir.parent_path();
+
+  const std::string filename="../stodos.json";
+  if(!std::filesystem::exists(filename))
+  {
+    std::cerr<<"Warning: "<<filename<<" does not exist\n\n";
+  }
+  
   json stodo_data;
 
   std::ifstream input(filename);
@@ -30,7 +42,7 @@ int main()
     {
       input>>stodo_data;
     }
-    catch(...) 
+    catch(...)
     {
       stodo_data=json::object();
     }
@@ -44,9 +56,9 @@ int main()
   {
     stodo_data["stodos"]=json::array();
   }
-  
+ 
   std::printf("==================\n");
-  std::printf("==  STODO_List  ==\n");
+  std::printf("=== STODO_List ===\n");
   std::printf("==================\n");
 
   while(loop)
@@ -57,7 +69,7 @@ int main()
     std::printf("What would you like to do?\n");
     std::printf("1) Add a new STODO\n");
     std::printf("2) List all your STODOs\n");
-    std::printf("3) Erase STODOs");
+    std::printf("3) Erase STODOs\n");
     std::printf("Q/q) Quit\n\n");
     getline(std::cin, options_answer);
 
@@ -67,10 +79,6 @@ int main()
       getline(std::cin, todo_title);
       std::printf("\n");
       
-      std::printf("When is this STODO due?\n");
-      getline(std::cin, due_date);
-      std::printf("\n");
-
       std::printf("Add a description to this STODO\n");
       getline(std::cin, todo_desc);
       std::printf("\n");
@@ -78,7 +86,6 @@ int main()
       json new_stodo={
         {"stodo_id", 0},
         {"todo_title", todo_title},
-        {"todo_due_date", due_date},
         {"todo_desc", todo_desc}
       };
 
@@ -106,11 +113,50 @@ int main()
     else if(options_answer=="2")
     {
       std::printf("=== STODOs List ===\n\n");
-      std::cout<<std::setw(4)<<stodo_data<<std::endl;
+      std::cout<<std::setw(4)<<stodo_data<<"\n\n";
     }
     else if(options_answer=="3")
     {
-      
+      std::printf("Enter the ID of the STODO you want to delete\n");
+      int ID_response;
+      std::string id_input;
+      getline(std::cin, id_input);
+
+      try
+      {
+        ID_response=std::stoi(id_input);
+      } catch(const std::exception&)
+      {
+        std::cerr<<"Error: please enter a valid number\n\n";
+        continue;
+      }
+
+      auto& stodos=stodo_data["stodos"];
+      bool found=false;
+
+      for(auto it=stodos.begin(); it!=stodos.end(); ++it)
+      {
+        if(it->contains("stodo_id")&&it->value("stodo_id", 0)==ID_response)
+        {
+          stodos.erase(it);
+          found=true;
+          break;
+        }
+      }
+
+      if(found)
+      {
+        std::ofstream output(filename);
+        if(output.is_open())
+        {
+          output<<stodo_data<<std::endl;
+          std::cout<<"Object with ID "<<ID_response<<"deleted successfully\n\n";
+        } else{
+          std::cerr<<"Error: Could not save the file.\n\n";
+        }
+      } else{
+        std::cout<<"No object with ID "<<ID_response<<" found.\n\n";
+      }
     }
     else if(options_answer=="Q"||options_answer=="q")
     {
